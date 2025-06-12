@@ -1,46 +1,59 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include "serverausftp.h"
 #include <string.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
 
-#define MSG_220 "220 srvFtp version 1.0\r\n"
-#define MSG_331 "331 Password required for %s\r\n"
-#define MSG_230 "230 User %s logged in\r\n"
-#define MSG_530 "530 Login incorrect\r\n"
-#define MSG_221 "221 Goodbye\r\n"
-#define MSG_550 "550 %s: no such file or directory\r\n"
-#define MSG_299 "299 File %s size %ld bytes\r\n"
-#define MSG_226 "226 Transfer complete\r\n"
+#include "serverpi.h"
+#include "serverausftp.h"
 
-//COMUNICACION
-/*
- *recv_cmd Recepciona un comando desde el socketDescriptor
- *recv hace el receive llmada definida en sys/socket
- *strtok se comporto distinto a medida que se va llamando devuelve tokens,
-  la primera vez le pasas el buffer y el separador para identificar tokens distintos
-*/
+int is_valid_command(const char *command) {
+    int i = 0;
+    while (valid_commands[i] != NULL) {
+        if (strcmp(command, valid_commands[i]) == 0) {
+            return arg_commands[i];
+        }
+        i++;
+    }
+    return -1;
+}
 
-int recv_cmd(int socketDescriptor, char *operation, char *param) {
+/* 
+ * Función recv_cmd recibe un comando del cliente y lo separa en operación y parámetro.
+ *
+ * @param socket_descriptor: Descriptor del socket desde el cual se recibe el comando.
+ * @param operation: Cadena donde se almacenará la operación del comando 
+ *                   (comandos básicos de ftp, por ejemplo: "USER", "PASS", "LIST", etc.).
+ * @param param: Cadena donde se almacenará el parámetro del comando, si existe.
+ * @return 0 si se recibió correctamente, 1 si hubo un error.
+ */
+int recv_cmd(int socket_descriptor, char *operation, char *param) {
     char buffer[BUFSIZE];
     char * token;
+    int args_number;
 
-    if (recv(socketDescriptor, buffer, BUFSIZE, 0) < 0){
-        fprintf(stderr,"error receiving data");
-	return 1;
+    if (recv(socket_descriptor, buffer, BUFSIZE, 0) < 0) {
+        fprintf(stderr, "Error: no se pudo recibir el comando.\n");
+        return 1;
     }
     buffer[strcspn(buffer, "\r\n")] = 0;
     token = strtok(buffer, " ");
-    if (token == NULL || strlen(token) < 4) {
-        fprintf(stderr, "not valid ftp comman");
-   	return 1;
-    } else {
-        strcpy(operation, token);
-        token = strtok(NULL, " ");
-        #if DEBUG
-        printf("par %s\n", token);
-        #endif
-        if (token != NULL) strcpy(param, token);
+    if (token == NULL || strlen(token) < 3 || (args_number = is_valid_command(token)) < 0) {
+        fprintf(stderr, "Error: comando no válido.\n");
+        return 1;
     }
+    strcpy(operation, token);
+    if (!args_number)
+        return 0;
+    token = strtok(NULL, " ");
+    #if DEBUG 
+    printf("par %s\n", token);
+    #endif
+    if (token != NULL) 
+        strcpy(param, token);
+    else {
+        fprintf(stderr, "Error: se esperaba un argumento para el comando %s.\n", operation);
+        return 1;
+    }
+    return 0;
 }

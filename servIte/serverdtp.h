@@ -3,6 +3,6 @@
 
 #include <stdbool.h>
 
-bool check_credentials(char*, char*);
+bool check_credentials(char *user, char *pass);
 
 #endif
