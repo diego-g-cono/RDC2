@@ -41,6 +41,7 @@ int main(int argc, char *argv[]){
     master_addr.sin_port = htons(port);
     bind(master_socket, (struct sockaddr *)&master_addr, sizeof(master_addr)) < 0;
     listen(master_socket, 5);
+
     while (1) {
         slave_addr_len = sizeof(slave_addr);
         slave_socket = accept(master_socket, (struct sockaddr *)&slave_addr, &slave_addr_len);
@@ -111,12 +112,20 @@ int main(int argc, char *argv[]){
                 break;
             }
             if (strcmp(command, "SYST") == 0) {
-                if (send(slave_socket, MSG_502, sizeof(MSG_502) - 1, 0) < 0) {
+                if (send(slave_socket, MSG_215, sizeof(MSG_215) - 1, 0) < 0) {
                     close(slave_socket);
                     fprintf(stderr, "Error: no se pudo enviar el mensaje SYST.\n");
                     break;
                 }
-                continue;
+            continue;
+            }
+            if (strcmp(command, "FEAT") == 0) {
+                if (send(slave_socket, MSG_FEAT, sizeof(MSG_FEAT) - 1, 0) < 0) {
+                    close(slave_socket);
+                    fprintf(stderr, "Error: no se pudo enviar el mensaje FEAT.\n");
+                    break;
+                }
+            continue;
             }
             // Aquí se pueden manejar otros comandos FTP
             // Por simplicidad, solo se maneja QUIT
