@@ -117,7 +117,6 @@ void handle_PORT(const char *args) {
   safe_dprintf(sess->control_sock, MSG_200);
 }
 
-
 void handle_RETR(const char *args) {
   ftp_session_t *sess = session_get();
 
@@ -134,9 +133,9 @@ void handle_RETR(const char *args) {
   }
 
   // Obtener el tamaño del archivo
-  fseek(file, 0, SEEK_END);
-  long filesize = ftell(file);
-  rewind(file);
+  fseek(file, 0, SEEK_END); //ir al final
+  long filesize = ftell(file); // obtener posición actual = tamaño
+  rewind(file); // volver al inicio
 
   // Enviar mensaje con tamaño
   safe_dprintf(sess->control_sock, MSG_299, args, filesize);

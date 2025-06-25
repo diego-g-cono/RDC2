@@ -35,7 +35,7 @@ int welcome(ftp_session_t *sess) {
   return 0;
 }
 
-int getexe_command(ftp_session_t *sess) {
+int getexe_command(ftp_session_t *sess) {//parsea y seapara entre argumento y comando
   char buffer[BUFFER_SIZE];
 
   // Receive string from CC
