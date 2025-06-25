@@ -2,7 +2,7 @@ CC      := gcc
 CFLAGS  := -Wall -Wextra -std=gnu11 -g
 LDFLAGS :=
 
-COPY_SRC_DIR := ../iterative
+COPY_SRC_DIR := ../servIte
 OVERRIDE_FILES := main.c signals.c signals.h
 
 # Automatically detect files in shared folder
